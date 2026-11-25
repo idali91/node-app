@@ -1,0 +1,9 @@
+.git
+.codegraph/
+.serena/
+node_modules
+.tools
+.rendered.yaml
+port-forward.log
+.env
+.DS_Store
