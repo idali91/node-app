@@ -1,0 +1,73 @@
+pipeline {
+    agent {
+        kubernetes {
+            inheritFrom 'ejercicio-1'
+            defaultContainer 'docker-cli'
+        }
+    }
+
+    options {
+        timestamps()
+    }
+
+    parameters {
+        string(name: 'IMAGE_NAME', defaultValue: 'docker.io/your-user/tecnico-node:1.0.0', trim: true,
+               description: 'Docker Hub image reference to build and publish')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build and validate') {
+            steps {
+                container('docker-cli') {
+                    sh '''
+                        set -eu
+                        if ! printf '%s' "$IMAGE_NAME" | grep -Eq '^docker\.io/[a-z0-9][a-z0-9_.-]*/tecnico-node:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'; then
+                            echo "IMAGE_NAME debe tener el formato docker.io/<usuario>/tecnico-node:<tag>" >&2
+                            exit 1
+                        fi
+
+                        docker_arch="$(docker info --format '{{.Architecture}}')"
+                        case "$docker_arch" in
+                            x86_64|amd64) ;;
+                            *) echo "El agente Docker debe ser linux/amd64; arquitectura detectada: $docker_arch" >&2; exit 1 ;;
+                        esac
+
+                        docker build --pull --tag "$IMAGE_NAME" .
+                        image_platform="$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$IMAGE_NAME")"
+                        if [ "$image_platform" != 'linux/amd64' ]; then
+                            echo "Se esperaba linux/amd64; imagen construida: $image_platform" >&2
+                            exit 1
+                        fi
+                        docker run --rm --entrypoint node "$IMAGE_NAME" --check /app/server.mjs
+                    '''
+                }
+            }
+        }
+
+        stage('Publish') {
+            steps {
+                container('docker-cli') {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-push',
+                                                      usernameVariable: 'DOCKERHUB_USER',
+                                                      passwordVariable: 'DOCKERHUB_TOKEN')]) {
+                        sh '''
+                            set -eu
+                            docker_config="$(mktemp -d)"
+                            trap 'rm -rf "$docker_config"' EXIT
+                            export DOCKER_CONFIG="$docker_config"
+                            printf '%s' "$DOCKERHUB_TOKEN" | docker login docker.io \
+                                --username "$DOCKERHUB_USER" --password-stdin
+                            docker push "$IMAGE_NAME"
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}

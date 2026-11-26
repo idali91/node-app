@@ -4,11 +4,16 @@ Esta carpeta contiene una API Node.js mínima, su imagen de Docker y una pipelin
 
 ## Recorrido rápido
 
-1. Construye y publica `docker.io/<usuario>/tecnico-node:1.0.0` en Docker Hub.
-2. Crea el secret `dockerhub-pull` en el namespace de destino.
-3. Configura un job Jenkins Pipeline que apunte a este repositorio y ejecuta la pipeline con `IMAGE_NAME` y `NAMESPACE`.
+1. Configura el job Jenkins `tecnico-node-build` para usar `Jenkinsfile.build` y el repositorio de esta app.
+2. Ejecuta la pipeline de build con `IMAGE_NAME=docker.io/<usuario>/tecnico-node:1.0.0`; valida y publica la imagen.
+3. Crea el secret `dockerhub-pull` en el namespace de destino.
+4. Configura otro job Jenkins para usar `Jenkinsfile` y ejecuta el despliegue con `IMAGE_NAME` y `NAMESPACE`.
 
-La pipeline contiene los stages Checkout, Deploy y Port forward. El último abre un túnel temporal dentro del agente Jenkins y consulta `/healthz`; el túnel se cierra al terminar el stage.
+La pipeline de despliegue contiene Checkout, Deploy y Port forward. Este último verifica `/healthz` desde el agente Jenkins y cierra el túnel al terminar.
+
+## Jenkins CI: build y publicación
+
+Crea una credencial Jenkins de tipo usuario/contraseña con ID `dockerhub-push`. Usa el usuario de Docker Hub y un token con permiso de lectura y escritura. El job de build usa el agente `ejercicio-1`; la imagen se publica para `linux/amd64`.
 
 ## Imagen
 
