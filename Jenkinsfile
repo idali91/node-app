@@ -16,7 +16,6 @@ pipeline {
     environment {
         APP_NAME = 'tecnico-node'
         KUBECTL_VERSION = 'v1.37.1'
-        PATH+KUBECTL = "${WORKSPACE}/.tools"
     }
 
     stages {
@@ -34,6 +33,7 @@ pipeline {
                                                       passwordVariable: 'DOCKERHUB_TOKEN')]) {
                         sh '''
                         set -eu
+                        export PATH="$WORKSPACE/.tools:$PATH"
                         set -o pipefail
                         if [ -z "$IMAGE_NAME" ]; then
                             echo "IMAGE_NAME no puede estar vacío" >&2
@@ -92,6 +92,7 @@ pipeline {
                 container('docker-cli') {
                     sh '''
                         set -eu
+                        export PATH="$WORKSPACE/.tools:$PATH"
                         kubectl port-forward --address 127.0.0.1 \
                             --namespace "$NAMESPACE" service/tecnico-node 18080:80 \
                             > "$WORKSPACE/port-forward.log" 2>&1 &
