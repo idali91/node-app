@@ -6,10 +6,6 @@ pipeline {
         }
     }
 
-    options {
-        timestamps()
-    }
-
     parameters {
         string(name: 'IMAGE_NAME', defaultValue: 'docker.io/idalilc/tecnico-node:1.0.0', trim: true,
                description: 'Docker Hub image reference to build and publish')

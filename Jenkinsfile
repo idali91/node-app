@@ -6,10 +6,6 @@ pipeline {
         }
     }
 
-    options {
-        timestamps()
-    }
-
     parameters {
         string(name: 'IMAGE_NAME', defaultValue: 'docker.io/idalilc/tecnico-node:1.0.0', trim: true,
                description: 'Referencia completa de la imagen de Docker Hub')
