@@ -11,7 +11,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'IMAGE_NAME', defaultValue: 'docker.io/your-user/tecnico-node:1.0.0', trim: true,
+        string(name: 'IMAGE_NAME', defaultValue: 'docker.io/idalilc/tecnico-node:1.0.0', trim: true,
                description: 'Referencia completa de la imagen de Docker Hub')
         string(name: 'NAMESPACE', defaultValue: 'tecnico-node', trim: true,
                description: 'Namespace de Kubernetes que ya existe')
@@ -33,8 +33,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 container('docker-cli') {
-                    sh '''
+                    withCredentials([usernamePassword(credentialsId: 'container-registry-push',
+                                                      usernameVariable: 'DOCKERHUB_USER',
+                                                      passwordVariable: 'DOCKERHUB_TOKEN')]) {
+                        sh '''
                         set -eu
+                        set -o pipefail
                         if [ -z "$IMAGE_NAME" ]; then
                             echo "IMAGE_NAME no puede estar vacío" >&2
                             exit 1
@@ -68,11 +72,21 @@ pipeline {
                         fi
 
                         kubectl get namespace "$NAMESPACE" >/dev/null
-                        kubectl get secret dockerhub-pull --namespace "$NAMESPACE" >/dev/null
+                        docker_config="$(mktemp -d)"
+                        trap 'rm -rf "$docker_config"' EXIT
+                        export DOCKER_CONFIG="$docker_config"
+                        printf '%s' "$DOCKERHUB_TOKEN" | docker login docker.io \
+                            --username "$DOCKERHUB_USER" --password-stdin
+                        kubectl create secret generic dockerhub-pull \
+                            --namespace "$NAMESPACE" \
+                            --from-file=.dockerconfigjson="$DOCKER_CONFIG/config.json" \
+                            --type=kubernetes.io/dockerconfigjson \
+                            --dry-run=client -o yaml | kubectl apply -f -
                         sed "s|__IMAGE_NAME__|$IMAGE_NAME|g" k8s/deployment.yaml > "$WORKSPACE/.rendered.yaml"
                         kubectl apply --namespace "$NAMESPACE" --filename "$WORKSPACE/.rendered.yaml"
                         kubectl rollout status deployment/tecnico-node --namespace "$NAMESPACE" --timeout=180s
-                    '''
+                        '''
+                    }
                 }
             }
         }

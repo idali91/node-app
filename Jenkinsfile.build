@@ -11,7 +11,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'IMAGE_NAME', defaultValue: 'docker.io/your-user/tecnico-node:1.0.0', trim: true,
+        string(name: 'IMAGE_NAME', defaultValue: 'docker.io/idalilc/tecnico-node:1.0.0', trim: true,
                description: 'Docker Hub image reference to build and publish')
     }
 
@@ -53,7 +53,7 @@ pipeline {
         stage('Publish') {
             steps {
                 container('docker-cli') {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-push',
+                    withCredentials([usernamePassword(credentialsId: 'container-registry-push',
                                                       usernameVariable: 'DOCKERHUB_USER',
                                                       passwordVariable: 'DOCKERHUB_TOKEN')]) {
                         sh '''

@@ -13,7 +13,7 @@ La pipeline de despliegue contiene Checkout, Deploy y Port forward. Este último
 
 ## Jenkins CI: build y publicación
 
-Crea una credencial Jenkins de tipo usuario/contraseña con ID `dockerhub-push`. Usa el usuario de Docker Hub y un token con permiso de lectura y escritura. El job de build usa el agente `ejercicio-1`; la imagen se publica para `linux/amd64`.
+El job utiliza la credencial Jenkins existente `container-registry-push` (usuario `idalilc`) y el agente `ejercicio-1`. La imagen se publica para `linux/amd64`.
 
 ## Imagen
 
@@ -26,7 +26,7 @@ La imagen parte de `node:22-alpine`, copia solo los archivos de la app y ejecuta
 
 ## Secret de Docker Hub
 
-El secret debe existir en el mismo namespace que recibirá el Deployment. Usa un token de acceso de Docker Hub con permiso de lectura. Evita guardar el token en Git o escribirlo directamente en el historial del shell.
+El namespace debe existir antes del despliegue. El stage Deploy inicia sesión en Docker Hub con la credencial Jenkins `container-registry-push` y crea o actualiza `dockerhub-pull` en el namespace. El secreto no se guarda en Git.
 
 ```sh
 set -eu
