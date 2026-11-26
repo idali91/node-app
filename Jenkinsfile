@@ -62,7 +62,7 @@ pipeline {
                             curl --fail --location --silent --show-error \
                                 --output "$WORKSPACE/.tools/kubectl.sha256" \
                                 "https://dl.k8s.io/$KUBECTL_VERSION/bin/linux/$arch/kubectl.sha256"
-                            printf '%s  %s\n' "$(cat "$WORKSPACE/.tools/kubectl.sha256")" "$WORKSPACE/.tools/kubectl" | sha256sum --check --status -
+                            printf '%s  %s\n' "$(cat "$WORKSPACE/.tools/kubectl.sha256")" "$WORKSPACE/.tools/kubectl" | sha256sum -c -
                             chmod 0755 "$WORKSPACE/.tools/kubectl"
                             rm "$WORKSPACE/.tools/kubectl.sha256"
                         fi
