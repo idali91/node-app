@@ -67,7 +67,6 @@ pipeline {
                             rm "$WORKSPACE/.tools/kubectl.sha256"
                         fi
 
-                        kubectl get namespace "$NAMESPACE" >/dev/null
                         docker_config="$(mktemp -d)"
                         trap 'rm -rf "$docker_config"' EXIT
                         export DOCKER_CONFIG="$docker_config"
