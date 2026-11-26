@@ -27,7 +27,7 @@ pipeline {
                 container('docker-cli') {
                     sh '''
                         set -eu
-                        if ! printf '%s' "$IMAGE_NAME" | grep -Eq '^docker\.io/[a-z0-9][a-z0-9_.-]*/tecnico-node:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'; then
+                        if ! printf '%s' "$IMAGE_NAME" | grep -Eq '^docker[.]io/[a-z0-9][a-z0-9_.-]*/tecnico-node:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$'; then
                             echo "IMAGE_NAME debe tener el formato docker.io/<usuario>/tecnico-node:<tag>" >&2
                             exit 1
                         fi
